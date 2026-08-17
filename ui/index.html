@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>DeepSeek Harness Desktop</title>
+  <style>
+    :root {
+      --bg-0: #0b1020;
+      --bg-1: #111733;
+      --bg-2: #0d1230;
+      --accent: #4f8cff;
+      --accent-dim: rgba(79, 140, 255, 0.16);
+      --text: #e6ecf8;
+      --text-dim: #8b97b4;
+      --text-faint: #5b6884;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --err: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--text);
+      background: linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .aurora {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(600px 400px at 18% 12%, rgba(79, 140, 255, 0.14), transparent 65%),
+        radial-gradient(500px 380px at 82% 78%, rgba(124, 92, 255, 0.12), transparent 65%),
+        radial-gradient(420px 300px at 70% 10%, rgba(52, 211, 153, 0.07), transparent 60%);
+      animation: drift 9s ease-in-out infinite alternate;
+    }
+    @keyframes drift {
+      from { transform: translate3d(-1.5%, -1%, 0); }
+      to { transform: translate3d(1.5%, 1%, 0); }
+    }
+    .wrap {
+      position: relative; z-index: 1; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 26px; padding: 40px;
+    }
+    .logo {
+      width: 76px; height: 76px; border-radius: 20px;
+      background: linear-gradient(135deg, #1f2a55, #12204a 60%, #0b1838);
+      border: 1px solid rgba(79, 140, 255, 0.35);
+      box-shadow: 0 0 42px rgba(79, 140, 255, 0.28), inset 0 0 22px rgba(79, 140, 255, 0.10);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: 700; letter-spacing: 1px; color: var(--accent);
+      position: relative;
+    }
+    .logo::after {
+      content: ""; position: absolute; inset: -6px; border-radius: 26px;
+      border: 1px solid transparent;
+      border-top-color: rgba(79, 140, 255, 0.5);
+      animation: ring 2.4s linear infinite;
+    }
+    @keyframes ring { to { transform: rotate(360deg); } }
+    .title { font-size: 17px; font-weight: 600; letter-spacing: 2px; color: var(--text); }
+    .subtitle { font-size: 12px; color: var(--text-faint); letter-spacing: 1px; margin-top: -18px; }
+
+    .progress-track {
+      width: min(420px, 80vw); height: 4px; border-radius: 2px;
+      background: rgba(255, 255, 255, 0.07); overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--accent), #7c5cff);
+      border-radius: 2px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 12px rgba(79, 140, 255, 0.6);
+    }
+
+    .stages {
+      width: min(420px, 80vw);
+      display: flex; flex-direction: column; gap: 10px;
+      font-size: 13px;
+    }
+    .stage {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--text-faint); transition: color 0.3s;
+    }
+    .stage .icon {
+      width: 20px; height: 20px; flex: none;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      border: 1.5px solid rgba(255, 255, 255, 0.14);
+      color: transparent;
+      transition: all 0.3s;
+    }
+    .stage.active { color: var(--text-dim); }
+    .stage.active .icon {
+      border-color: var(--accent);
+      border-top-color: transparent;
+      animation: spin 0.9s linear infinite;
+    }
+    .stage.done { color: var(--text-dim); }
+    .stage.done .icon {
+      background: rgba(52, 211, 153, 0.12);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+    .stage.warn { color: var(--warn); }
+    .stage.warn .icon { border-color: var(--warn); color: var(--warn); }
+    .stage.err { color: var(--err); }
+    .stage.err .icon { border-color: var(--err); color: var(--err); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .stage .label { flex: 1; }
+    .stage .hint { font-size: 11px; color: var(--text-faint); }
+
+    #panel-err {
+      display: none; width: min(420px, 80vw);
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 12px; color: var(--err); line-height: 1.6;
+    }
+    footer { font-size: 11px; color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="wrap">
+    <div class="logo">DSH</div>
+    <div class="title">DEEPSEEK HARNESS</div>
+    <div class="subtitle">DESKTOP</div>
+
+    <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+
+    <div class="stages">
+      <div class="stage" id="st-checking"><span class="icon">✓</span><span class="label">检查运行环境</span></div>
+      <div class="stage" id="st-market"><span class="icon">✓</span><span class="label">准备插件市场</span><span class="hint" id="hint-market"></span></div>
+      <div class="stage" id="st-starting"><span class="icon">✓</span><span class="label">启动 DSH 后端</span></div>
+      <div class="stage" id="st-waiting"><span class="icon">✓</span><span class="label">连接服务</span></div>
+      <div class="stage" id="st-ready"><span class="icon">✓</span><span class="label">进入工作台</span></div>
+    </div>
+
+    <div id="panel-err"></div>
+    <footer>DeepSeek Harness Desktop · v0.1.5</footer>
+  </div>
+
+  <script>
+    const ORDER = ['checking', 'market', 'starting', 'waiting', 'ready'];
+    const levels = { checking: 8, market: 15, 'market-done': 30, starting: 40, waiting: 55, ready: 100 };
+    const marks = { checking: 0, market: 1, starting: 2, waiting: 3, ready: 4 };
+    let done = new Set();
+
+    function mark(id, cls) {
+      const el = document.getElementById('st-' + id);
+      if (!el) return;
+      el.classList.remove('active');
+      el.classList.add(cls);
+    }
+
+    window.__setStage = function (p) {
+      const stage = p.stage;
+      if (stage === 'error') {
+        document.getElementById('panel-err').style.display = 'block';
+        document.getElementById('panel-err').textContent = '启动失败：' + (p.message || '未知错误');
+        return;
+      }
+      if (stage === 'market-warn') {
+        mark('market', 'warn');
+        document.getElementById('hint-market').textContent = '（市场安装失败，详见控制台）';
+        return;
+      }
+      const lv = levels[stage];
+      if (lv !== undefined) document.getElementById('fill').style.width = lv + '%';
+      const idx = marks[stage];
+      if (idx === undefined) return;
+      for (let i = 0; i < idx; i++) {
+        const id = ORDER[i];
+        if (!done.has(id)) { mark(id, 'done'); done.add(id); }
+      }
+      const cur = ORDER[idx];
+      const el = document.getElementById('st-' + cur);
+      if (el) el.classList.add('active');
+      if (stage === 'ready') {
+        done.forEach(id => mark(id, 'done'));
+        mark('ready', 'done');
+      }
+    };
+  </script>
+</body>
+</html>
